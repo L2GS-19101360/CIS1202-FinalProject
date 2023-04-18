@@ -65,3 +65,87 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+
+
+
+
+/////       LOGIN FORM PHP BELOW
+
+
+<?php
+session_start();
+
+$servername = "localhost";
+$database = "suico_baldera_ochavo_gobui_nacario_webdev1_finalproject_database"; 
+$dbUsername = "root";
+$dbPassword = "";
+
+// Create connection
+$conn = mysqli_connect($servername, $dbUsername, $dbPassword, $database);
+
+// Check connection
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+if (isset($_POST["login_btn"])) {
+  $username = $_POST["email"];
+  $pwd = $_POST["password"];
+
+  // Sanitize the input to prevent SQL injection
+  $username = mysqli_real_escape_string($conn, $username);
+  $pwd = mysqli_real_escape_string($conn, $pwd);
+
+  // Hash the password for better security
+  $hashed_pwd = password_hash($pwd, PASSWORD_DEFAULT);
+
+  // Check if the user exists in the database
+  $sql = "SELECT * FROM user_t WHERE USER_EMAIL = '$username'";
+  $result = mysqli_query($conn, $sql);
+
+  if (mysqli_num_rows($result) === 1) {
+      // Verify the password
+      $row = mysqli_fetch_assoc($result);
+      if (password_verify($pwd, $row['USER_PASSWORD'])) {
+          $_SESSION['username'] = $username;
+          header("Location: home.php");
+          exit;
+      } else {
+          $error = "Invalid password";
+      }
+  } else {
+      $error = "User not found";
+  }
+}
+
+if (isset($_POST["reg_btn"])) {
+    $username = $_POST["email"];
+    $pwd = $_POST["password"];
+
+    // Sanitize the input to prevent SQL injection
+    $username = mysqli_real_escape_string($conn, $username);
+    $pwd = mysqli_real_escape_string($conn, $pwd);
+
+    // Hash the password for better security
+    $hashed_pwd = password_hash($pwd, PASSWORD_DEFAULT);
+
+    // Check if the user already exists in the database
+    $sql = "SELECT * FROM user_t WHERE USER_EMAIL = '$username'";
+    $result = mysqli_query($conn, $sql);
+
+    if (mysqli_num_rows($result) === 0) {
+        // Insert the user into the database
+        $sql = "INSERT INTO user_t (USER_EMAIL, USER_PASSWORD) VALUES ('$username', '$hashed_pwd')";
+        mysqli_query($conn, $sql);
+        $_SESSION['username'] = $username;
+        header("Location: home.php");
+        exit;
+    } else {
+        $error = "User already exists";
+    }
+}
+
+mysqli_close($conn);
+?>
